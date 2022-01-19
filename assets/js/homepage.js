@@ -23,13 +23,103 @@ var getUserRepos = function(user) {
     var apiUrl = "https://api.github.com/users/" + user + "/repos";
           
     // make a request to the url
-    fetch(apiUrl).then(function(response) {
+    fetch(apiUrl)
+        .then(function(response) {
+        if(response.ok) {                      //if the API gives us a valid response 
         response.json().then(function(data) {
-        console.log(data);
+            displayRepos(data, user);
         });
-    });
+        } else {               //if API returns 404 error or no user found
+            alert("error: GitHub User Not Found");
+        }
+    })
+
+    //.catch is built into the fetch API that can help us catch connectivity issues. notice it is chained to the end of .then() method
+    //if the request to the API returns successful, it will trigger .then(). If it fails, it will trigger catch()
+    .catch(function() {
+        alert("unable to connect to GitHub");
+    })
 };
 
-getUserRepos("AlessandroB96");
+
 
 //note: if you use .json() method, and the API returns non-json data, then use text() instead
+
+
+//--------------------------------------------
+
+var userFormEl = document.querySelector("#user-form");
+var nameInputEl = document.querySelector("#username");
+var repoContainerEl = document.querySelector("#repos-container");
+var repoSearchTerm = document.querySelector("#repo-search-term");
+
+let formSubmitHandler = function(event) {
+    event.preventDefault();       //we see this again, good practice to write this when we submit forms so the whole page doesnt automatically refresh
+    
+    // get value from input element
+    var username = nameInputEl.value.trim();
+
+    if (username) {
+        getUserRepos(username);
+        nameInputEl.value = "";
+      } else {
+        alert("Please enter a GitHub username");
+      }
+    console.log(event);
+}
+
+userFormEl.addEventListener("submit", formSubmitHandler);
+
+
+
+//recieving data 
+ var displayRepos = function (repos , searchTerm) {
+
+    //if api returns any repos
+    if (repos.length === 0) {
+        repoContainerEl.textContent = "No repositories found.";
+        return;
+    }
+     console.log(repos);
+     console.log(searchTerm);
+
+    //clear old content. To make it look professional
+     repoContainerEl.textContent = "";
+     repoSearchTerm.textContent = searchTerm;
+
+
+     // loop over repos
+    for (var i = 0; i < repos.length; i++) {
+    // format repo name
+    var repoName = repos[i].owner.login + "/" + repos[i].name;
+  
+    // create a container for each repo
+    var repoEl = document.createElement("div");
+    repoEl.classList = "list-item flex-row justify-space-between align-center";
+  
+    // create a span element to hold repository name
+    var titleEl = document.createElement("span");
+    titleEl.textContent = repoName;
+  
+    // create a status element
+    var statusEl = document.createElement("span");
+    statusEl.classList = "flex-row align-center";
+
+    // check if current repo has issues or not
+    if (repos[i].open_issues_count > 0) {
+    statusEl.innerHTML = "<i class='fas fa-times status-icon icon-danger'></i>" + repos[i].open_issues_count + " issue(s)";
+    } else {
+        statusEl.innerHTML = "<i class='fas fa-check-square status-icon icon-success'></i>";
+    }
+    // append to container
+    repoEl.appendChild(titleEl);
+
+    // append to container
+    repoEl.appendChild(statusEl);
+
+    
+  
+    // append container to the dom
+    repoContainerEl.appendChild(repoEl);
+  }
+ };
