@@ -14,7 +14,21 @@ console.log("outside"); */
 //if we check console.log for response, the url tells us where the response came from.
         //A stutus value of 200 as displayed, means that it is a success and the request went through successfully
 
+var languageButtonsEl = document.querySelector("#language-buttons"); //referenced at the bottom of the script file 
 
+var getFeaturedRepos = function(language) {
+    var apiUrl = "https://api.github.com/search/repositories?q=" + language + "+is:featured&sort=help-wanted-issues";
+
+    fetch(apiUrl).then(function (response) {
+        if(response.ok) {
+            response.json().then(function(data) {
+                displayRepos(data.items, language);
+            });
+        } else {
+            alert('Error: GitHub User Not Found');
+        }
+    });
+};
 
 
 
@@ -126,3 +140,17 @@ userFormEl.addEventListener("submit", formSubmitHandler);
     repoContainerEl.appendChild(repoEl);
   }
  };
+
+ var buttonClickHandler = function (event) {
+    let language = event.target.getAttribute("data-language");
+    console.log(language);
+    if(language) {
+       getFeaturedRepos(language) 
+    }
+    //clear old content (even tho it comes after the function call of getFeaturedRepos, it will execute first cuz getFeaturedRepos is asyncronous)
+    repoContainerEl.textContent="";
+    
+ };
+
+ //we dont need to make event click listeners for each button becuase of event delegation. as long as we source the parent element
+ languageButtonsEl.addEventListener("click", buttonClickHandler)
